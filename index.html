@@ -8,6 +8,7 @@
 <style>
 :root{color-scheme:dark;--bg:#111915;--panel:#19241e;--line:#35463b;--text:#f3f6ec;--muted:#b4c2b7;--lime:#d6fa7a;font:16px system-ui,sans-serif}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top right,#293b23,transparent 48%),var(--bg);color:var(--text);min-height:100vh}main{width:min(960px,100%);margin:auto;padding:38px 20px}header{margin-bottom:26px}.eyebrow{color:var(--lime);font-size:.76rem;font-weight:750;letter-spacing:.16em;text-transform:uppercase}h1{font-size:clamp(2.25rem,7vw,4rem);letter-spacing:-.06em;margin:.22em 0 .09em;line-height:1.04}h2{font-size:1.3rem;margin:0 0 17px}p{line-height:1.5;color:var(--muted);margin:.55em 0}.stats,.layout,.fields{display:grid;gap:14px}.stats{grid-template-columns:1.3fr 1fr 1fr;margin-bottom:18px}.layout{grid-template-columns:minmax(290px,.83fr) minmax(0,1.17fr);align-items:start}.card{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:21px}.hero{background:var(--lime);border-color:var(--lime);color:#172315}.metric-label{font-size:.85rem;font-weight:650;color:var(--muted)}.hero .metric-label{color:#36451e}.metric{display:block;margin-top:7px;font-size:clamp(1.45rem,4vw,2.55rem);font-weight:780;letter-spacing:-.045em;line-height:1.08;overflow-wrap:anywhere}.unit{font-size:.78rem;font-weight:650;letter-spacing:0}.fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}label{font-size:.85rem;font-weight:650;display:block}input:not([type=checkbox]){width:100%;min-width:0;margin-top:6px;border:1px solid var(--line);border-radius:10px;padding:11px 9px;background:#111a15;color:var(--text);font:inherit;min-height:46px}.check{display:flex;align-items:center;gap:9px;margin:15px 0 10px;min-height:30px}.check input{width:19px;height:19px;accent-color:var(--lime);margin:0}button{cursor:pointer;font:inherit;font-weight:700;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:10px;padding:9px 11px}button:hover{border-color:var(--lime)}:focus-visible{outline:2px solid var(--lime);outline-offset:3px}.primary{background:var(--lime);color:#172315;border-color:var(--lime);min-height:46px;flex:1}.actions,.row-actions{display:flex;gap:8px}.hint,.status,footer{font-size:.84rem}.status{color:var(--lime)}.status:empty{display:none}.status[data-error=true]{color:#ffc5a8}.list{list-style:none;margin:0;padding:0}.entry{padding:13px 0;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap}.entry small{display:block;color:var(--muted);margin-top:4px}.row-actions button{font-size:.8rem;min-height:40px}.row-main{font-weight:700}.empty{padding:22px 12px;border:1px dashed var(--line);border-radius:12px;text-align:center}.help{margin:0 0 17px;font-size:.89rem}footer{margin-top:18px;color:var(--muted)}[hidden]{display:none!important}@media(max-width:640px){main{padding:25px 13px}.layout{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.hero{grid-column:1/-1}.card{padding:16px}.metric{font-size:1.65rem}}
+.chart-card{margin-top:18px}.chart-caption{font-size:.86rem;margin-top:-8px;margin-bottom:16px}.chart-list{display:grid;gap:13px;list-style:none;margin:0;padding:0}.chart-label{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:.86rem}.chart-label span{color:var(--muted)}.chart-track{height:9px;border-radius:8px;background:#34443a;margin-top:6px}.chart-bar{display:block;height:100%;border-radius:inherit;background:var(--lime)}
 </style>
 </head>
 <body>
@@ -37,6 +38,12 @@
 </section>
 <section class="card"><h2>Historie tankování</h2><p class="empty" id="empty">Zatím tu není žádné tankování.</p><ul class="list" id="history"></ul></section>
 </div>
+<section class="card chart-card" aria-labelledby="chart-title">
+<h2 id="chart-title">Vývoj spotřeby</h2>
+<p class="chart-caption">Posledních 8 úseků mezi tankováními do plna, od nejstaršího. Délka pruhu odpovídá spotřebě v l/100 km.</p>
+<p class="empty" id="chart-empty">První úsek se zobrazí po dvou tankováních do plna s různým stavem tachometru.</p>
+<ol class="chart-list" id="chart-list"></ol>
+</section>
 <footer>Záznamy se ukládají v tomto prohlížeči a mezi zařízeními se nesynchronizují.</footer>
 </main>
 <script>
@@ -66,21 +73,56 @@ try {
 }
 
 function summarize(sorted) {
-  let firstFull = null;
-  let km = 0, liters = 0, coveredLiters = 0, cost = 0, totalLiters = 0;
+  let lastFull = null;
+  let pendingLiters = 0, km = 0, coveredLiters = 0, cost = 0, totalLiters = 0;
+  const periods = [];
   for (const entry of sorted) {
     cost += entry.cost;
     totalLiters += entry.liters;
-    if (firstFull !== null) liters += entry.liters;
-    if (entry.full) {
-      if (firstFull === null) firstFull = entry.km;
-      if (entry.km > firstFull) {
-        km = entry.km - firstFull;
-        coveredLiters = liters;
-      }
+    if (lastFull !== null) pendingLiters += entry.liters;
+    if (!entry.full) continue;
+    if (lastFull === null) {
+      lastFull = entry.km;
+      continue;
     }
+    const distance = entry.km - lastFull;
+    if (distance <= 0) continue;
+    periods.push({date: entry.date, km: distance, average: pendingLiters * 100 / distance});
+    km += distance;
+    coveredLiters += pendingLiters;
+    pendingLiters = 0;
+    lastFull = entry.km;
   }
-  return {cost, totalLiters, km, average: km > 0 ? coveredLiters * 100 / km : null};
+  return {cost, totalLiters, km, periods, average: km > 0 ? coveredLiters * 100 / km : null};
+}
+
+function formatDate(date) {
+  return new Date(date + "T12:00:00").toLocaleDateString("cs-CZ");
+}
+
+function renderChart(periods) {
+  const visible = periods.slice(-8);
+  el("chart-empty").hidden = visible.length > 0;
+  const max = Math.max(1, ...visible.map(period => period.average));
+  el("chart-list").replaceChildren(...visible.map(period => {
+    const row = document.createElement("li");
+    const label = document.createElement("div");
+    label.className = "chart-label";
+    const distance = document.createElement("span");
+    distance.textContent = formatDate(period.date) + " · " + format(period.km, 0) + " km";
+    const value = document.createElement("strong");
+    value.textContent = format(period.average) + " l/100 km";
+    label.append(distance, value);
+    const track = document.createElement("div");
+    track.className = "chart-track";
+    track.setAttribute("aria-hidden", "true");
+    const bar = document.createElement("span");
+    bar.className = "chart-bar";
+    bar.style.width = (period.average / max * 100) + "%";
+    track.append(bar);
+    row.append(label, track);
+    return row;
+  }));
 }
 
 function action(label, handler) {
@@ -94,6 +136,7 @@ function action(label, handler) {
 function render() {
   const sorted = [...entries].sort((a, b) => a.km - b.km || a.date.localeCompare(b.date) || a.order - b.order);
   const result = summarize(sorted);
+  renderChart(result.periods);
   el("average").textContent = result.average === null ? "—" : format(result.average);
   el("total").textContent = format(result.cost);
   el("volume").textContent = format(result.totalLiters);
@@ -109,8 +152,8 @@ function render() {
     headline.className = "row-main";
     headline.textContent = format(entry.liters) + " l · " + format(entry.cost) + " Kč";
     const detail = document.createElement("small");
-    const date = new Date(entry.date + "T12:00:00").toLocaleDateString("cs-CZ");
-    detail.textContent = date + " · " + format(entry.km, 0) + " km · " + (entry.full ? "Do plna" : "Částečně");
+    detail.textContent = formatDate(entry.date) + " · " + format(entry.km, 0) + " km · " +
+      (entry.full ? "Do plna" : "Částečně") + " · " + format(entry.cost / entry.liters) + " Kč/l";
     summary.append(headline, detail);
     const buttons = document.createElement("div");
     buttons.className = "row-actions";
