@@ -10,13 +10,13 @@
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top right,#293b23,transparent 48%),var(--bg);color:var(--text);min-height:100vh}main{width:min(960px,100%);margin:auto;padding:38px 20px}header{margin-bottom:26px}.eyebrow{color:var(--lime);font-size:.76rem;font-weight:750;letter-spacing:.16em;text-transform:uppercase}h1{font-size:clamp(2.25rem,7vw,4rem);letter-spacing:-.06em;margin:.22em 0 .09em;line-height:1.04}h2{font-size:1.3rem;margin:0 0 17px}p{line-height:1.5;color:var(--muted);margin:.55em 0}.stats,.layout,.fields{display:grid;gap:14px}.stats{grid-template-columns:1.3fr 1fr 1fr;margin-bottom:18px}.layout{grid-template-columns:minmax(290px,.83fr) minmax(0,1.17fr);align-items:start}.card{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:21px}.hero{background:var(--lime);border-color:var(--lime);color:#172315}.metric-label{font-size:.85rem;font-weight:650;color:var(--muted)}.hero .metric-label{color:#36451e}.metric{display:block;margin-top:7px;font-size:clamp(1.45rem,4vw,2.55rem);font-weight:780;letter-spacing:-.045em;line-height:1.08;overflow-wrap:anywhere}.unit{font-size:.78rem;font-weight:650;letter-spacing:0}.fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}label{font-size:.85rem;font-weight:650;display:block}input:not([type=checkbox]){width:100%;min-width:0;margin-top:6px;border:1px solid var(--line);border-radius:10px;padding:11px 9px;background:#111a15;color:var(--text);font:inherit;min-height:46px}.check{display:flex;align-items:center;gap:9px;margin:15px 0 10px;min-height:30px}.check input{width:19px;height:19px;accent-color:var(--lime);margin:0}button{cursor:pointer;font:inherit;font-weight:700;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:10px;padding:9px 11px}button:hover{border-color:var(--lime)}:focus-visible{outline:2px solid var(--lime);outline-offset:3px}.primary{background:var(--lime);color:#172315;border-color:var(--lime);min-height:46px;flex:1}.actions,.row-actions{display:flex;gap:8px}.hint,.status,footer{font-size:.84rem}.status{color:var(--lime)}.status:empty{display:none}.status[data-error=true]{color:#ffc5a8}.list{list-style:none;margin:0;padding:0}.entry{padding:13px 0;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap}.entry small{display:block;color:var(--muted);margin-top:4px}.row-actions button{font-size:.8rem;min-height:40px}.row-main{font-weight:700}.empty{padding:22px 12px;border:1px dashed var(--line);border-radius:12px;text-align:center}.help{margin:0 0 17px;font-size:.89rem}footer{margin-top:18px;color:var(--muted)}[hidden]{display:none!important}@media(max-width:640px){main{padding:25px 13px}.layout{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.hero{grid-column:1/-1}.card{padding:16px}.metric{font-size:1.65rem}}
 .chart-card{margin-top:18px}.chart-caption{font-size:.86rem;margin-top:-8px;margin-bottom:16px}.chart-list{display:grid;gap:13px;list-style:none;margin:0;padding:0}.chart-label{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:.86rem}.chart-label span{color:var(--muted)}.chart-track{height:9px;border-radius:8px;background:#34443a;margin-top:6px}.chart-bar{display:block;height:100%;border-radius:inherit;background:var(--lime)}
 .expense-card{margin-top:18px}.expense-total{font-size:1.8rem;color:var(--lime);font-weight:780}.expense-breakdown{margin-bottom:15px}.expense-card form{margin-bottom:15px}.expense-card form .primary{margin-top:12px}.expense-list{margin-top:14px}
-.sync-card{margin-bottom:18px}.sync-card h2{margin-bottom:6px}.sync-card .actions{margin-top:12px;flex-wrap:wrap}.sync-card .actions button{min-height:44px}.sync-card .primary{flex:0 1 auto}.sync-card input{max-width:100%}
+.sync-card{margin-top:18px;margin-bottom:18px}.sync-card h2{margin-bottom:6px}.sync-card .actions{margin-top:12px;flex-wrap:wrap}.sync-card .actions button{min-height:44px}.sync-card .primary{flex:0 1 auto}.sync-card input{max-width:100%}
 .per-km{margin:0 0 18px;padding:12px 0;border-block:1px solid var(--line)}.per-km .fields strong{display:block;color:var(--lime);font-size:1.35rem}.reminder-card{margin-top:18px}.reminder-card .actions{margin-top:12px}.reminder-info{min-height:1.3em}.reminder-info[data-late=true]{color:#ffc5a8}
-.clio-hero{display:grid;grid-template-columns:minmax(0,max-content) clamp(74px,23vw,132px);align-items:center;gap:clamp(10px,2.5vw,24px);padding:clamp(13px,3vw,22px);border:1px solid var(--line);border-radius:20px;background:#0d221a}
+.clio-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:clamp(10px,2.5vw,24px);padding:clamp(13px,3vw,22px);border:1px solid var(--line);border-radius:20px;background:#0d221a}
 .clio-hero h1{font-size:clamp(1.55rem,5vw,3.35rem)}
 .clio-hero-copy p{margin-bottom:0}
-.clio-hero-art{overflow:hidden;margin:0;border-radius:10px}
-.clio-hero-art img{display:block;width:100%;height:auto;animation:clio-camera 4s ease-out both}
+.clio-hero-art{overflow:hidden;margin:0;border-radius:10px;align-self:stretch;display:flex;align-items:center}
+.clio-hero-art img{display:block;width:100%;height:100%;object-fit:contain;animation:clio-camera 4s ease-out both}
 @keyframes clio-camera{from{transform:scale(1.06)}to{transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.clio-hero-art img{animation:none}}
 </style>
@@ -27,23 +27,7 @@
 <div class="clio-hero-copy"><div class="eyebrow">Renault Clio · 2004</div><h1>Deník tankování</h1><p>Spotřeba a výdaje na jednom místě.</p></div>
 <figure class="clio-hero-art"><img src="clio-header.webp" width="900" height="600" alt="Tyrkysový Renault Clio s rozsvícenými světly" fetchpriority="high"></figure>
 </header>
-<section class="card sync-card" aria-labelledby="sync-title">
-<h2 id="sync-title">Synchronizace mezi zařízeními</h2>
-<p class="hint" id="sync-mode">Přihlas se stejným účtem na telefonu i PC.</p>
-<form id="sync-login" hidden>
-<div class="fields">
-<label>E-mail<input name="email" type="email" autocomplete="username" required></label>
-<label>Heslo<input name="password" type="password" autocomplete="current-password" minlength="6" required></label>
-</div>
-<div class="actions"><button class="primary" type="submit">Přihlásit se</button><button type="submit" value="signup">Vytvořit účet</button></div>
-</form>
-<div id="sync-actions" class="actions" hidden>
-<button type="button" id="sync-refresh">Obnovit data</button>
-<button type="button" id="sync-import" hidden>Přenést záznamy z tohoto prohlížeče</button>
-<button type="button" id="sync-logout">Odhlásit se</button>
-</div>
-<p class="status" id="sync-status" role="status"></p>
-</section>
+
 <section class="stats" aria-label="Přehled tankování">
 <div class="card hero"><div class="metric-label">Průměrná spotřeba</div><div class="metric"><span id="average">—</span> <span class="unit">l/100 km</span></div></div>
 <div class="card"><div class="metric-label">Celkem zaplaceno</div><div class="metric"><span id="total">0</span> <span class="unit">Kč</span></div></div>
@@ -108,6 +92,23 @@
 <div class="actions"><button class="primary" type="submit">Uložit termíny</button></div>
 </form>
 <p class="status" id="reminder-status" role="status"></p>
+</section>
+<section class="card sync-card" aria-labelledby="sync-title">
+<h2 id="sync-title">Synchronizace mezi zařízeními</h2>
+<p class="hint" id="sync-mode">Přihlas se stejným účtem na telefonu i PC.</p>
+<form id="sync-login" hidden>
+<div class="fields">
+<label>E-mail<input name="email" type="email" autocomplete="username" required></label>
+<label>Heslo<input name="password" type="password" autocomplete="current-password" minlength="6" required></label>
+</div>
+<div class="actions"><button class="primary" type="submit">Přihlásit se</button><button type="submit" value="signup">Vytvořit účet</button></div>
+</form>
+<div id="sync-actions" class="actions" hidden>
+<button type="button" id="sync-refresh">Obnovit data</button>
+<button type="button" id="sync-import" hidden>Přenést záznamy z tohoto prohlížeče</button>
+<button type="button" id="sync-logout">Odhlásit se</button>
+</div>
+<p class="status" id="sync-status" role="status"></p>
 </section>
 <footer id="storage-mode">Bez přihlášení se záznamy ukládají v tomto prohlížeči.</footer>
 </main>
