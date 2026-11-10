@@ -12,11 +12,15 @@
 .expense-card{margin-top:18px}.expense-total{font-size:1.8rem;color:var(--lime);font-weight:780}.expense-breakdown{margin-bottom:15px}.expense-card form{margin-bottom:15px}.expense-card form .primary{margin-top:12px}.expense-list{margin-top:14px}
 .sync-card{margin-bottom:18px}.sync-card h2{margin-bottom:6px}.sync-card .actions{margin-top:12px;flex-wrap:wrap}.sync-card .actions button{min-height:44px}.sync-card .primary{flex:0 1 auto}.sync-card input{max-width:100%}
 .per-km{margin:0 0 18px;padding:12px 0;border-block:1px solid var(--line)}.per-km .fields strong{display:block;color:var(--lime);font-size:1.35rem}.reminder-card{margin-top:18px}.reminder-card .actions{margin-top:12px}.reminder-info{min-height:1.3em}.reminder-info[data-late=true]{color:#ffc5a8}
+.clio-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);align-items:center;overflow:hidden;gap:12px;border:1px solid var(--line);border-radius:22px;background:#0d221a}.clio-hero-copy{padding:24px}.clio-hero-art{overflow:hidden;margin:0}.clio-hero-art img{display:block;width:100%;height:auto;animation:clio-camera 4s ease-out both}@keyframes clio-camera{from{transform:scale(1.06)}to{transform:scale(1)}}@media(max-width:640px){.clio-hero{grid-template-columns:1fr;gap:0}.clio-hero-copy{padding:20px 17px 6px}.clio-hero-art{max-height:215px}.clio-hero-art img{height:min(59vw,215px);object-fit:cover;object-position:center 58%}}@media(prefers-reduced-motion:reduce){.clio-hero-art img{animation:none}}
 </style>
 </head>
 <body>
 <main>
-<header><div class="eyebrow">Renault Clio · 2004</div><h1>Deník tankování</h1><p>Spotřeba a výdaje na jednom místě.</p></header>
+<header class="clio-hero">
+<div class="clio-hero-copy"><div class="eyebrow">Renault Clio · 2004</div><h1>Deník tankování</h1><p>Spotřeba a výdaje na jednom místě.</p></div>
+<figure class="clio-hero-art"><img src="clio-header.webp" width="900" height="600" alt="Tyrkysový Renault Clio s rozsvícenými světly" fetchpriority="high"></figure>
+</header>
 <section class="card sync-card" aria-labelledby="sync-title">
 <h2 id="sync-title">Synchronizace mezi zařízeními</h2>
 <p class="hint" id="sync-mode">Přihlas se stejným účtem na telefonu i PC.</p>
