@@ -11,6 +11,7 @@
 .chart-card{margin-top:18px}.chart-caption{font-size:.86rem;margin-top:-8px;margin-bottom:16px}.chart-list{display:grid;gap:13px;list-style:none;margin:0;padding:0}.chart-label{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:.86rem}.chart-label span{color:var(--muted)}.chart-track{height:9px;border-radius:8px;background:#34443a;margin-top:6px}.chart-bar{display:block;height:100%;border-radius:inherit;background:var(--lime)}
 .expense-card{margin-top:18px}.expense-total{font-size:1.8rem;color:var(--lime);font-weight:780}.expense-breakdown{margin-bottom:15px}.expense-card form{margin-bottom:15px}.expense-card form .primary{margin-top:12px}.expense-list{margin-top:14px}
 .sync-card{margin-bottom:18px}.sync-card h2{margin-bottom:6px}.sync-card .actions{margin-top:12px;flex-wrap:wrap}.sync-card .actions button{min-height:44px}.sync-card .primary{flex:0 1 auto}.sync-card input{max-width:100%}
+.per-km{margin:0 0 18px;padding:12px 0;border-block:1px solid var(--line)}.per-km .fields strong{display:block;color:var(--lime);font-size:1.35rem}.reminder-card{margin-top:18px}.reminder-card .actions{margin-top:12px}.reminder-info{min-height:1.3em}.reminder-info[data-late=true]{color:#ffc5a8}
 </style>
 </head>
 <body>
@@ -67,6 +68,13 @@
 <h2 id="expense-title">Celkové náklady na auto</h2>
 <div class="expense-total" id="ownership-total">0 Kč</div>
 <p class="hint expense-breakdown" id="ownership-breakdown"></p>
+<div class="per-km">
+<div class="fields">
+<div><span class="metric-label">Palivo na kilometr</span><strong id="fuel-per-km">—</strong></div>
+<div><span class="metric-label">Celkem na kilometr</span><strong id="total-per-km">—</strong></div>
+</div>
+<p class="hint" id="cost-distance"></p>
+</div>
 <form id="expense-form">
 <div class="fields">
 <label>Výdaj<input name="label" maxlength="90" placeholder="např. Výměna oleje" required></label>
@@ -79,6 +87,18 @@
 <p class="empty" id="expense-empty">Zatím tu nejsou žádné další výdaje.</p>
 <ul class="list expense-list" id="expense-list"></ul>
 </section>
+<section class="card reminder-card" aria-labelledby="reminder-title">
+<h2 id="reminder-title">Připomínky STK a pojištění</h2>
+<p class="hint">Zadej datum příští STK a konce platnosti nebo obnovení pojištění. Prázdné datum připomínku odstraní.</p>
+<form id="reminder-form">
+<div class="fields">
+<div><label>Příští STK<input type="date" name="stk"></label><p class="hint reminder-info" id="stk-info"></p></div>
+<div><label>Termín pojištění<input type="date" name="insurance"></label><p class="hint reminder-info" id="insurance-info"></p></div>
+</div>
+<div class="actions"><button class="primary" type="submit">Uložit termíny</button></div>
+</form>
+<p class="status" id="reminder-status" role="status"></p>
+</section>
 <footer id="storage-mode">Bez přihlášení se záznamy ukládají v tomto prohlížeči.</footer>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
@@ -87,6 +107,7 @@
 
 const storageKey = "clio-2004-refuels-v1";
 const expensesKey = "clio-2004-expenses-v1";
+const remindersKey = "clio-2004-reminders-v1";
 const setupKey = "clio-2004-expense-setup-v1";
 const el = id => document.getElementById(id);
 const form = el("entry-form");
@@ -101,6 +122,10 @@ let cloudState = null;
 let cloudBusy = false;
 let cloudStarting = true;
 const syncForm = el("sync-login");
+const reminderForm = el("reminder-form");
+const reminderTypes = ["stk", "insurance"];
+let reminders = readLocalReminders();
+setReminderFields();
 let editing = null;
 let storageReadable = true;
 
@@ -197,7 +222,8 @@ function render() {
   const sorted = [...entries].sort((a, b) => a.km - b.km || a.date.localeCompare(b.date) || a.order - b.order);
   const result = summarize(sorted);
   renderChart(result.periods);
-  renderExpenses(result.cost);
+  renderExpenses(result.cost, sorted.length ? sorted.at(-1).km - sorted[0].km : 0);
+  renderReminders();
   el("average").textContent = result.average === null ? "—" : format(result.average);
   el("total").textContent = format(result.cost);
   el("volume").textContent = format(result.totalLiters);
@@ -279,10 +305,15 @@ function ownershipCosts(fuel, expenses) {
   return {extra, total: fuel + extra};
 }
 
-function renderExpenses(fuel) {
+function renderExpenses(fuel, distance) {
   const {extra, total} = ownershipCosts(fuel, expenses);
   el("ownership-total").textContent = format(total) + " Kč";
   el("ownership-breakdown").textContent = "Palivo " + format(fuel) + " Kč · ostatní výdaje " + format(extra) + " Kč";
+  el("fuel-per-km").textContent = distance > 0 ? format(fuel / distance) + " Kč/km" : "—";
+  el("total-per-km").textContent = distance > 0 ? format(total / distance) + " Kč/km" : "—";
+  el("cost-distance").textContent = distance > 0
+    ? "Všechny zapsané částky vydělené rozdílem mezi prvním a posledním tachometrem (" + format(distance, 0) + " km)."
+    : "Cena za kilometr se zobrazí po dvou tankováních s různým stavem tachometru.";
   el("expense-empty").hidden = expenses.length > 0;
   el("expense-list").replaceChildren(...[...expenses].reverse().map(expense => {
     const item = document.createElement("li");
@@ -387,6 +418,72 @@ form.addEventListener("submit", async event => {
   }
 });
 
+function readLocalReminders() {
+  try {
+    return JSON.parse(localStorage.getItem(remindersKey)) ?? {};
+  } catch {
+    return {};
+  }
+}
+
+function setReminderFields() {
+  for (const type of reminderTypes) reminderForm.elements.namedItem(type).value = reminders[type] ?? "";
+}
+
+function useReminders(next, resetFields = false) {
+  const clean = reminderTypes.every(type => reminderForm.elements.namedItem(type).value === (reminders[type] ?? ""));
+  reminders = next;
+  if (clean || resetFields) setReminderFields();
+}
+
+function daysUntil(date, now) {
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  return (Date.parse(date) - today) / 86400000;
+}
+
+function renderReminders() {
+  const today = new Date();
+  for (const type of reminderTypes) {
+    const date = reminders[type];
+    const label = el(type + "-info");
+    const days = daysUntil(date, today);
+    label.dataset.late = Number.isFinite(days) && days < 0;
+    const count = Math.abs(days);
+    const unit = count === 1 ? "den" : count >= 2 && count <= 4 ? "dny" : "dní";
+    label.textContent = !Number.isFinite(days) ? "Termín zatím není nastavený." :
+      formatDate(date) + " · " + (days === 0 ? "Dnes" : days > 0 ? "Zbývá " + days + " " + unit :
+        "Po termínu " + count + " " + unit);
+  }
+}
+
+function reminderStatus(message, error = false) {
+  el("reminder-status").textContent = message;
+  el("reminder-status").dataset.error = error;
+}
+
+reminderForm.addEventListener("submit", async event => {
+  event.preventDefault();
+  if (cloudStarting || cloudBusy) return;
+  const next = Object.fromEntries(reminderTypes.map(type => [type, reminderForm.elements.namedItem(type).value]));
+  if (cloudUser) {
+    if (cloudState && await cloudOperation(() => writeCloud(entries, expenses, cloudState.imported_ids, next))) {
+      setReminderFields();
+      reminderStatus("Termíny uloženy online.");
+    } else {
+      reminderStatus("Termíny se neuložily. Zkontroluj stav synchronizace.", true);
+    }
+    return;
+  }
+  try {
+    localStorage.setItem(remindersKey, JSON.stringify(next));
+    useReminders(next, true);
+    renderReminders();
+    reminderStatus("Termíny uloženy v tomto prohlížeči.");
+  } catch {
+    reminderStatus("Termíny se nepodařilo uložit.", true);
+  }
+});
+
 function syncStatus(message, error = false) {
   el("sync-status").textContent = message;
   el("sync-status").dataset.error = error;
@@ -407,7 +504,7 @@ function setCloudControls() {
   for (const button of document.querySelectorAll("#sync-login button, #sync-actions button")) {
     button.disabled = cloudBusy;
   }
-  for (const button of document.querySelectorAll("#entry-form button[type=submit], #expense-form button[type=submit]")) {
+  for (const button of document.querySelectorAll("#entry-form button[type=submit], #expense-form button[type=submit], #reminder-form button[type=submit]")) {
     button.disabled = cloudStarting || cloudBusy || Boolean(cloudUser && !cloudState);
   }
   el("sync-mode").textContent = cloudUser ? "Přihlášeno jako " + (cloudUser.email ?? "uživatel") :
@@ -440,18 +537,19 @@ async function cloudOperation(work) {
 }
 
 async function loadCloud() {
-  const {data, error} = await cloud.from("clio_diary").select("fuel,expenses,imported_ids,revision")
+  const {data, error} = await cloud.from("clio_diary").select("fuel,expenses,imported_ids,reminders,revision")
     .eq("user_id", cloudUser.id).maybeSingle();
   if (error) throw error;
   cloudState = data ?? {fuel: [], expenses: [], imported_ids: {}, revision: null};
   entries = cloudState.fuel;
   expenses = cloudState.expenses;
+  useReminders(cloudState.reminders ?? {});
   if (editing && !entries.some(row => row.id === editing.id)) resetForm();
   render();
 }
 
-async function writeCloud(fuel, extra, imported = cloudState.imported_ids) {
-  const record = {user_id: cloudUser.id, fuel, expenses: extra, imported_ids: imported, revision: crypto.randomUUID()};
+async function writeCloud(fuel, extra, imported = cloudState.imported_ids, nextReminders = reminders) {
+  const record = {user_id: cloudUser.id, fuel, expenses: extra, imported_ids: imported, reminders: nextReminders, revision: crypto.randomUUID()};
   const table = cloud.from("clio_diary");
   const request = cloudState.revision
     ? table.update(record).eq("user_id", cloudUser.id).eq("revision", cloudState.revision)
@@ -466,6 +564,7 @@ async function writeCloud(fuel, extra, imported = cloudState.imported_ids) {
   cloudState = record;
   entries = fuel;
   expenses = extra;
+  useReminders(nextReminders);
   render();
   syncStatus("Uloženo online.");
   return true;
@@ -482,6 +581,8 @@ async function useCloudSession(session) {
   resetForm();
   entries = cloudUser ? [] : readLocal(storageKey);
   expenses = cloudUser ? [] : readLocal(expensesKey);
+  useReminders(cloudUser ? {} : readLocalReminders(), true);
+  reminderStatus("");
   render();
   if (cloudUser) {
     await loadCloud();
@@ -549,7 +650,10 @@ function refreshCloud() {
 
 el("sync-refresh").addEventListener("click", refreshCloud);
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") refreshCloud();
+  if (document.visibilityState === "visible") {
+    renderReminders();
+    refreshCloud();
+  }
 });
 
 el("sync-import").addEventListener("click", () => cloudOperation(async () => {
