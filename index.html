@@ -10,11 +10,29 @@
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top right,#293b23,transparent 48%),var(--bg);color:var(--text);min-height:100vh}main{width:min(960px,100%);margin:auto;padding:38px 20px}header{margin-bottom:26px}.eyebrow{color:var(--lime);font-size:.76rem;font-weight:750;letter-spacing:.16em;text-transform:uppercase}h1{font-size:clamp(2.25rem,7vw,4rem);letter-spacing:-.06em;margin:.22em 0 .09em;line-height:1.04}h2{font-size:1.3rem;margin:0 0 17px}p{line-height:1.5;color:var(--muted);margin:.55em 0}.stats,.layout,.fields{display:grid;gap:14px}.stats{grid-template-columns:1.3fr 1fr 1fr;margin-bottom:18px}.layout{grid-template-columns:minmax(290px,.83fr) minmax(0,1.17fr);align-items:start}.card{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:21px}.hero{background:var(--lime);border-color:var(--lime);color:#172315}.metric-label{font-size:.85rem;font-weight:650;color:var(--muted)}.hero .metric-label{color:#36451e}.metric{display:block;margin-top:7px;font-size:clamp(1.45rem,4vw,2.55rem);font-weight:780;letter-spacing:-.045em;line-height:1.08;overflow-wrap:anywhere}.unit{font-size:.78rem;font-weight:650;letter-spacing:0}.fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}label{font-size:.85rem;font-weight:650;display:block}input:not([type=checkbox]){width:100%;min-width:0;margin-top:6px;border:1px solid var(--line);border-radius:10px;padding:11px 9px;background:#111a15;color:var(--text);font:inherit;min-height:46px}.check{display:flex;align-items:center;gap:9px;margin:15px 0 10px;min-height:30px}.check input{width:19px;height:19px;accent-color:var(--lime);margin:0}button{cursor:pointer;font:inherit;font-weight:700;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:10px;padding:9px 11px}button:hover{border-color:var(--lime)}:focus-visible{outline:2px solid var(--lime);outline-offset:3px}.primary{background:var(--lime);color:#172315;border-color:var(--lime);min-height:46px;flex:1}.actions,.row-actions{display:flex;gap:8px}.hint,.status,footer{font-size:.84rem}.status{color:var(--lime)}.status:empty{display:none}.status[data-error=true]{color:#ffc5a8}.list{list-style:none;margin:0;padding:0}.entry{padding:13px 0;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap}.entry small{display:block;color:var(--muted);margin-top:4px}.row-actions button{font-size:.8rem;min-height:40px}.row-main{font-weight:700}.empty{padding:22px 12px;border:1px dashed var(--line);border-radius:12px;text-align:center}.help{margin:0 0 17px;font-size:.89rem}footer{margin-top:18px;color:var(--muted)}[hidden]{display:none!important}@media(max-width:640px){main{padding:25px 13px}.layout{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.hero{grid-column:1/-1}.card{padding:16px}.metric{font-size:1.65rem}}
 .chart-card{margin-top:18px}.chart-caption{font-size:.86rem;margin-top:-8px;margin-bottom:16px}.chart-list{display:grid;gap:13px;list-style:none;margin:0;padding:0}.chart-label{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:.86rem}.chart-label span{color:var(--muted)}.chart-track{height:9px;border-radius:8px;background:#34443a;margin-top:6px}.chart-bar{display:block;height:100%;border-radius:inherit;background:var(--lime)}
 .expense-card{margin-top:18px}.expense-total{font-size:1.8rem;color:var(--lime);font-weight:780}.expense-breakdown{margin-bottom:15px}.expense-card form{margin-bottom:15px}.expense-card form .primary{margin-top:12px}.expense-list{margin-top:14px}
+.sync-card{margin-bottom:18px}.sync-card h2{margin-bottom:6px}.sync-card .actions{margin-top:12px;flex-wrap:wrap}.sync-card .actions button{min-height:44px}.sync-card .primary{flex:0 1 auto}.sync-card input{max-width:100%}
 </style>
 </head>
 <body>
 <main>
 <header><div class="eyebrow">Renault Clio · 2004</div><h1>Deník tankování</h1><p>Spotřeba a výdaje na jednom místě.</p></header>
+<section class="card sync-card" aria-labelledby="sync-title">
+<h2 id="sync-title">Synchronizace mezi zařízeními</h2>
+<p class="hint" id="sync-mode">Přihlas se stejným účtem na telefonu i PC.</p>
+<form id="sync-login" hidden>
+<div class="fields">
+<label>E-mail<input name="email" type="email" autocomplete="username" required></label>
+<label>Heslo<input name="password" type="password" autocomplete="current-password" minlength="6" required></label>
+</div>
+<div class="actions"><button class="primary" type="submit">Přihlásit se</button><button type="submit" value="signup">Vytvořit účet</button></div>
+</form>
+<div id="sync-actions" class="actions" hidden>
+<button type="button" id="sync-refresh">Obnovit data</button>
+<button type="button" id="sync-import" hidden>Přenést záznamy z tohoto prohlížeče</button>
+<button type="button" id="sync-logout">Odhlásit se</button>
+</div>
+<p class="status" id="sync-status" role="status"></p>
+</section>
 <section class="stats" aria-label="Přehled tankování">
 <div class="card hero"><div class="metric-label">Průměrná spotřeba</div><div class="metric"><span id="average">—</span> <span class="unit">l/100 km</span></div></div>
 <div class="card"><div class="metric-label">Celkem zaplaceno</div><div class="metric"><span id="total">0</span> <span class="unit">Kč</span></div></div>
@@ -61,8 +79,9 @@
 <p class="empty" id="expense-empty">Zatím tu nejsou žádné další výdaje.</p>
 <ul class="list expense-list" id="expense-list"></ul>
 </section>
-<footer>Záznamy se ukládají v tomto prohlížeči a mezi zařízeními se nesynchronizují.</footer>
+<footer id="storage-mode">Bez přihlášení se záznamy ukládají v tomto prohlížeči.</footer>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
 <script>
 "use strict";
 
@@ -76,6 +95,12 @@ const format = (value, digits = 2) => value.toLocaleString("cs-CZ", {maximumFrac
 let entries = [];
 let expenses = [];
 let expensesReadable = true;
+let cloud = null;
+let cloudUser = null;
+let cloudState = null;
+let cloudBusy = false;
+let cloudStarting = true;
+const syncForm = el("sync-login");
 let editing = null;
 let storageReadable = true;
 
@@ -221,7 +246,9 @@ function edit(entry) {
   field("km").focus();
 }
 
-function persist(next) {
+async function persist(next) {
+  if (cloudStarting || cloudBusy) return false;
+  if (cloudUser) return saveCloud(next, expenses);
   try {
     if (!storageReadable) throw new Error("Storage unavailable");
     localStorage.setItem(storageKey, JSON.stringify(next));
@@ -234,9 +261,9 @@ function persist(next) {
   return true;
 }
 
-function remove(entry) {
+async function remove(entry) {
   if (!confirm("Smazat vybrané tankování?")) return;
-  if (persist(entries.filter(record => record.id !== entry.id))) {
+  if (await persist(entries.filter(record => record.id !== entry.id))) {
     if (editing?.id === entry.id) resetForm();
     setStatus("Tankování smazáno.");
   }
@@ -271,9 +298,9 @@ function renderExpenses(fuel) {
     }
     const buttons = document.createElement("div");
     buttons.className = "row-actions";
-    buttons.append(action("Smazat", () => {
+    buttons.append(action("Smazat", async () => {
       if (confirm("Smazat výdaj „" + expense.label + "“?") &&
-          persistExpenses(expenses.filter(row => row.id !== expense.id))) {
+          await persistExpenses(expenses.filter(row => row.id !== expense.id))) {
         expenseStatus("Výdaj smazán.");
       }
     }));
@@ -282,7 +309,9 @@ function renderExpenses(fuel) {
   }));
 }
 
-function persistExpenses(next) {
+async function persistExpenses(next) {
+  if (cloudBusy) return false;
+  if (cloudUser) return saveCloud(entries, next);
   try {
     if (!expensesReadable) throw new Error("Storage unavailable");
     localStorage.setItem(expensesKey, JSON.stringify(next));
@@ -295,7 +324,7 @@ function persistExpenses(next) {
   return true;
 }
 
-function applyExpenseSetup() {
+async function applyExpenseSetup() {
   const params = new URLSearchParams(location.hash.slice(1));
   if (params.get("setup") !== "expenses") return;
   const car = decimal(params.get("car") ?? "");
@@ -309,7 +338,7 @@ function applyExpenseSetup() {
         {id: "initial-car", label: "Koupě auta", cost: car, date: ""},
         {id: "initial-insurance", label: "Pojištění", cost: insurance, date}
       ];
-      if (!persistExpenses([...expenses, ...initial.filter(row => !expenses.some(saved => saved.id === row.id))])) return;
+      if (!await persistExpenses([...expenses, ...initial.filter(row => !expenses.some(saved => saved.id === row.id))])) return;
       localStorage.setItem(setupKey, "1");
       expenseStatus("Koupě auta a pojištění byly přidány.");
     }
@@ -319,9 +348,11 @@ function applyExpenseSetup() {
   }
 }
 
-el("expense-form").addEventListener("submit", event => {
+el("expense-form").addEventListener("submit", async event => {
   event.preventDefault();
-  const data = new FormData(event.currentTarget);
+  if (cloudStarting) return;
+  const expenseForm = event.currentTarget;
+  const data = new FormData(expenseForm);
   const label = data.get("label").trim();
   const cost = decimal(data.get("cost"));
   if (!label || !Number.isFinite(cost) || cost <= 0) {
@@ -329,13 +360,13 @@ el("expense-form").addEventListener("submit", event => {
     return;
   }
   const id = globalThis.crypto?.randomUUID?.() ?? String(Date.now()) + "-" + Math.random();
-  if (persistExpenses([...expenses, {id, label, cost, date: data.get("date")}])) {
-    event.currentTarget.reset();
+  if (await persistExpenses([...expenses, {id, label, cost, date: data.get("date")}])) {
+    expenseForm.reset();
     expenseStatus("Výdaj uložen.");
   }
 });
 
-form.addEventListener("submit", event => {
+form.addEventListener("submit", async event => {
   event.preventDefault();
   const km = decimal(field("km").value);
   const liters = decimal(field("liters").value);
@@ -350,16 +381,194 @@ form.addEventListener("submit", event => {
     date: field("date").value, km, liters, cost, full: field("full").checked
   };
   const next = editing ? entries.map(entry => entry.id === record.id ? record : entry) : [...entries, record];
-  if (persist(next)) {
+  if (await persist(next)) {
     setStatus(editing ? "Změny uloženy." : "Tankování uloženo.");
     resetForm();
   }
 });
 
+function syncStatus(message, error = false) {
+  el("sync-status").textContent = message;
+  el("sync-status").dataset.error = error;
+}
+
+function readLocal(key) {
+  try {
+    const rows = JSON.parse(localStorage.getItem(key) ?? "[]");
+    return Array.isArray(rows) ? rows : [];
+  } catch {
+    return [];
+  }
+}
+
+function setCloudControls() {
+  syncForm.hidden = !cloud || cloudStarting || Boolean(cloudUser);
+  el("sync-actions").hidden = !cloudUser;
+  for (const button of document.querySelectorAll("#sync-login button, #sync-actions button")) {
+    button.disabled = cloudBusy;
+  }
+  for (const button of document.querySelectorAll("#entry-form button[type=submit], #expense-form button[type=submit]")) {
+    button.disabled = cloudStarting || cloudBusy || Boolean(cloudUser && !cloudState);
+  }
+  el("sync-mode").textContent = cloudUser ? "Přihlášeno jako " + (cloudUser.email ?? "uživatel") :
+    "Přihlas se stejným účtem na telefonu i PC.";
+  el("storage-mode").textContent = cloudUser ? "Přihlášené změny se ukládají do soukromé databáze." :
+    "Bez přihlášení se záznamy ukládají v tomto prohlížeči.";
+  el("sync-import").hidden = !cloudState || !getImport().length;
+}
+
+function getImport() {
+  const marked = cloudState?.imported_ids ?? {};
+  return [["fuel", storageKey], ["expenses", expensesKey]].flatMap(([kind, key]) =>
+    readLocal(key).filter(row => row && typeof row.id === "string" && !Object.hasOwn(marked, kind + ":" + row.id))
+      .map(row => ({kind, row})));
+}
+
+async function cloudOperation(work) {
+  if (cloudBusy) return false;
+  cloudBusy = true;
+  setCloudControls();
+  try {
+    return await work();
+  } catch {
+    syncStatus("Operace se nepodařila. Zkontroluj připojení a zkus to znovu.", true);
+    return false;
+  } finally {
+    cloudBusy = false;
+    setCloudControls();
+  }
+}
+
+async function loadCloud() {
+  const {data, error} = await cloud.from("clio_diary").select("fuel,expenses,imported_ids,revision")
+    .eq("user_id", cloudUser.id).maybeSingle();
+  if (error) throw error;
+  cloudState = data ?? {fuel: [], expenses: [], imported_ids: {}, revision: null};
+  entries = cloudState.fuel;
+  expenses = cloudState.expenses;
+  if (editing && !entries.some(row => row.id === editing.id)) resetForm();
+  render();
+}
+
+async function writeCloud(fuel, extra, imported = cloudState.imported_ids) {
+  const record = {user_id: cloudUser.id, fuel, expenses: extra, imported_ids: imported, revision: crypto.randomUUID()};
+  const table = cloud.from("clio_diary");
+  const request = cloudState.revision
+    ? table.update(record).eq("user_id", cloudUser.id).eq("revision", cloudState.revision)
+    : table.insert(record);
+  const {data, error} = await request.select("revision").maybeSingle();
+  if (error && error.code !== "23505") throw error;
+  if (!data) {
+    await loadCloud();
+    syncStatus("Deník se mezitím změnil na jiném zařízení. Načetl jsem nová data. Zkontroluj změnu a zkus ji znovu.", true);
+    return false;
+  }
+  cloudState = record;
+  entries = fuel;
+  expenses = extra;
+  render();
+  syncStatus("Uloženo online.");
+  return true;
+}
+
+function saveCloud(fuel, extra) {
+  if (!cloudState) return false;
+  return cloudOperation(() => writeCloud(fuel, extra));
+}
+
+async function useCloudSession(session) {
+  cloudUser = session?.user ?? null;
+  cloudState = null;
+  resetForm();
+  entries = cloudUser ? [] : readLocal(storageKey);
+  expenses = cloudUser ? [] : readLocal(expensesKey);
+  render();
+  if (cloudUser) {
+    await loadCloud();
+    syncStatus("Data načtena z cloudu.");
+  }
+}
+
+async function initializeCloud() {
+  setCloudControls();
+  try {
+    await applyExpenseSetup();
+    cloud = window.supabase?.createClient("https://jgsuttbszovbrmhzhbbx.supabase.co", "sb_publishable_7t7iMVCBM_aWwDEtf2giZw_zlNbGADi");
+    if (!cloud) throw new Error("Missing Supabase SDK");
+    await cloudOperation(async () => {
+      const {data, error} = await cloud.auth.getSession();
+      if (error) throw error;
+      await useCloudSession(data.session);
+    });
+    cloud.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" && cloudUser) {
+        setTimeout(() => {
+          if (!cloudBusy && cloudUser) cloudOperation(() => useCloudSession(session));
+        }, 0);
+      }
+    });
+  } catch {
+    syncStatus("Cloudové přihlášení se nepodařilo načíst. Místní deník je dostupný.", true);
+  } finally {
+    cloudStarting = false;
+    setCloudControls();
+  }
+}
+
+syncForm.addEventListener("submit", event => {
+  event.preventDefault();
+  const {email, password} = Object.fromEntries(new FormData(syncForm));
+  const signup = event.submitter?.value === "signup";
+  cloudOperation(async () => {
+    const {data, error} = signup ? await cloud.auth.signUp({email, password, options: {emailRedirectTo: location.origin + location.pathname}}) :
+      await cloud.auth.signInWithPassword({email, password});
+    if (error) {
+      syncStatus(signup ? "Účet se nepodařilo vytvořit. Použij e-mail svého účtu Supabase." :
+        "Přihlášení se nezdařilo. Ověř e-mail, heslo a potvrzení registrace.", true);
+      return;
+    }
+    syncForm.reset();
+    if (data.session) await useCloudSession(data.session);
+    else syncStatus("Potvrď registraci odkazem v e-mailu. Pak se vrať sem a přihlas se.");
+  });
+});
+
+el("sync-logout").addEventListener("click", () => cloudOperation(async () => {
+  const {error} = await cloud.auth.signOut({scope: "local"});
+  if (error) throw error;
+  await useCloudSession(null);
+  syncStatus("Odhlášeno. Zobrazuji záznamy z tohoto prohlížeče.");
+}));
+
+function refreshCloud() {
+  if (cloudUser && !editing) cloudOperation(async () => {
+    await loadCloud();
+    syncStatus("Data načtena z cloudu.");
+  });
+}
+
+el("sync-refresh").addEventListener("click", refreshCloud);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") refreshCloud();
+});
+
+el("sync-import").addEventListener("click", () => cloudOperation(async () => {
+  if (!cloudState) return;
+  const fuel = [...entries];
+  const extra = [...expenses];
+  const imported = {...cloudState.imported_ids};
+  for (const {kind, row} of getImport()) {
+    const rows = kind === "fuel" ? fuel : extra;
+    if (!rows.some(existing => existing.id === row.id)) rows.push(row);
+    imported[kind + ":" + row.id] = true;
+  }
+  if (await writeCloud(fuel, extra, imported)) syncStatus("Záznamy z tohoto prohlížeče byly přeneseny.");
+}));
+
 el("cancel").addEventListener("click", () => { resetForm(); setStatus(""); });
 resetForm();
-applyExpenseSetup();
 render();
+initializeCloud();
 </script>
 </body>
 </html>
